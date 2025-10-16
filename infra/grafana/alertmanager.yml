@@ -1,0 +1,68 @@
+# AlertManager Configuration
+
+global:
+  resolve_timeout: 5m
+  # SMTP configuration for email alerts
+  # smtp_from: 'alerts@regami.com'
+  # smtp_smarthost: 'smtp.gmail.com:587'
+  # smtp_auth_username: 'your-email@gmail.com'
+  # smtp_auth_password: 'your-app-password'
+  # smtp_require_tls: true
+
+# Route tree for alerts
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'default'
+
+  routes:
+    # Critical alerts - immediate notification
+    - match:
+        severity: critical
+      receiver: 'critical'
+      continue: false
+
+    # Warning alerts - grouped notifications
+    - match:
+        severity: warning
+      receiver: 'warning'
+      continue: false
+
+# Alert receivers
+receivers:
+  - name: 'default'
+    # Add your notification channels here
+    # webhook_configs:
+    #   - url: 'http://your-webhook-url'
+
+  - name: 'critical'
+    # Email for critical alerts
+    # email_configs:
+    #   - to: 'oncall@regami.com'
+    #     headers:
+    #       Subject: '[CRITICAL] {{ .GroupLabels.alertname }}'
+
+    # Slack for critical alerts
+    # slack_configs:
+    #   - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+    #     channel: '#alerts-critical'
+    #     title: '[CRITICAL] {{ .GroupLabels.alertname }}'
+    #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+  - name: 'warning'
+    # Email for warnings
+    # email_configs:
+    #   - to: 'team@regami.com'
+    #     headers:
+    #       Subject: '[WARNING] {{ .GroupLabels.alertname }}'
+
+# Inhibition rules (suppress certain alerts based on others)
+inhibit_rules:
+  # Suppress warning alerts if critical alert is firing
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'cluster', 'service']

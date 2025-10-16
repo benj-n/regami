@@ -1,0 +1,47 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<!-- French Version -->
+<h2>Votre demande a été acceptée ! ✅</h2>
+<p>Bonjour,</p>
+<p>
+    Bonne nouvelle ! Le gardien {{ offer_owner_email }} a accepté votre demande de garde.
+</p>
+
+<div class="info-box">
+    <strong>Détails de la garde :</strong><br>
+    <strong>Dates :</strong> {{ start_date }} → {{ end_date }}<br>
+    <strong>Gardien :</strong> {{ offer_owner_email }}<br>
+    <strong>Statut :</strong> En attente de votre confirmation finale
+</div>
+
+<p>
+    <strong>Action requise :</strong> Veuillez confirmer définitivement cette garde pour finaliser l'arrangement.
+    Une fois confirmée, vous pourrez coordonner les détails avec le gardien.
+</p>
+
+<a href="{{ app_url }}/matches" class="button">Confirmer maintenant</a>
+
+<!-- English Version -->
+<div class="bilingual">
+    <h2>Your Request Has Been Accepted! ✅</h2>
+    <p>Hello,</p>
+    <p>
+        Good news! The guardian {{ offer_owner_email }} has accepted your care request.
+    </p>
+
+    <div class="info-box">
+        <strong>Care Details:</strong><br>
+        <strong>Dates:</strong> {{ start_date }} → {{ end_date }}<br>
+        <strong>Guardian:</strong> {{ offer_owner_email }}<br>
+        <strong>Status:</strong> Awaiting your final confirmation
+    </div>
+
+    <p>
+        <strong>Action required:</strong> Please provide your final confirmation to finalize the arrangement.
+        Once confirmed, you can coordinate the details with the guardian.
+    </p>
+
+    <a href="{{ app_url }}/matches" class="button">Confirm Now</a>
+</div>
+{% endblock %}

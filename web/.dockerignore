@@ -1,0 +1,12 @@
+# Keep web Docker context small when building directly from web/
+node_modules/
+dist/
+.cache/
+.eslintcache
+coverage/
+.vite/
+
+# Git & editor
+.git/
+.vscode/
+.DS_Store

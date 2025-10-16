@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+
+# Build outputs
+dist/
+build/
+*.min.js
+*.min.css
+
+# Package lock files
+package-lock.json
+web/package-lock.json
+
+# Cache directories
+.vite/
+.pytest_cache/
+.mypy_cache/
+__pycache__/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Generated files
+coverage/
+.coverage
+
+# IDE
+.vscode/
+.idea/

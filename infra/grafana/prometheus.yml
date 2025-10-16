@@ -1,0 +1,68 @@
+# Prometheus Configuration for Regami
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: 'dev'
+    cluster: 'regami'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  # - "alerts/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # Node Exporter (host metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'node-exporter'
+
+  # Regami API (FastAPI)
+  # Replace with your actual API endpoint
+  - job_name: 'regami-api'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets:
+          - 'localhost:8000'  # Local development
+          # - 'api.regami.com'  # Production (uncomment and update)
+        labels:
+          service: 'api'
+          environment: 'dev'
+
+  # CloudWatch Exporter (optional - requires additional setup)
+  # - job_name: 'cloudwatch'
+  #   static_configs:
+  #     - targets: ['cloudwatch-exporter:9106']
+  #       labels:
+  #         service: 'cloudwatch'
+
+  # PostgreSQL Exporter (optional - requires additional setup)
+  # - job_name: 'postgres'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+  #       labels:
+  #         service: 'postgres'
+
+  # Redis Exporter (optional - requires additional setup)
+  # - job_name: 'redis'
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']
+  #       labels:
+  #         service: 'redis'

@@ -1,0 +1,190 @@
+{
+  "dashboard": {
+    "title": "Regami - Business Metrics",
+    "uid": "regami-business",
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "1m",
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "User Registrations (Last 24h)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "increase(regami_user_registrations_total[24h])",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 10, "color": "yellow"},
+                {"value": 50, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Matches Created (Last 24h)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "increase(regami_matches_created_total[24h])",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Messages Sent (Last 24h)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "increase(regami_messages_sent_total[24h])",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "FCM Notifications Sent (Last 24h)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "increase(regami_fcm_notifications_sent_total[24h])",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "User Registrations by Role",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "regami_user_registrations_total",
+            "legendFormat": "{{role}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Match Status Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "expr": "regami_match_status_gauge",
+            "legendFormat": "{{status}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Matches Created Over Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "rate(regami_matches_created_total[1h])",
+            "legendFormat": "{{match_type}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"label": "matches/sec", "show": true},
+          {"show": false}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Messages Sent Over Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "rate(regami_messages_sent_total[5m])",
+            "legendFormat": "Messages",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"label": "messages/sec", "show": true},
+          {"show": false}
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Photo Uploads",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "rate(regami_photo_uploads_total[5m])",
+            "legendFormat": "Uploads",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"label": "uploads/sec", "show": true},
+          {"show": false}
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Photo Upload Size Distribution",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "rate(regami_photo_upload_size_bytes_sum[5m]) / rate(regami_photo_upload_size_bytes_count[5m])",
+            "legendFormat": "Avg Size",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"label": "bytes", "show": true, "format": "bytes"},
+          {"show": false}
+        ]
+      }
+    ]
+  }
+}

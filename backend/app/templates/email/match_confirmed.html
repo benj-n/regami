@@ -1,0 +1,59 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<!-- French Version -->
+<h2>Garde confirmée ! 🎉</h2>
+<p>Bonjour,</p>
+<p>
+    Excellente nouvelle ! La garde a été confirmée par les deux parties.
+</p>
+
+<div class="info-box">
+    <strong>Détails de la garde confirmée :</strong><br>
+    <strong>Dates :</strong> {{ start_date }} → {{ end_date }}<br>
+    <strong>Gardien :</strong> {{ offer_owner_email }}<br>
+    <strong>Demandeur :</strong> {{ requester_email }}<br>
+    <strong>Statut :</strong> ✅ Confirmée
+</div>
+
+<p>
+    Vous pouvez maintenant coordonner les détails finaux avec l'autre partie :
+</p>
+<ul>
+    <li>Lieu de rendez-vous</li>
+    <li>Heure exacte de prise en charge et de retour</li>
+    <li>Besoins spécifiques du chien</li>
+    <li>Coordonnées d'urgence</li>
+</ul>
+
+<a href="{{ app_url }}/matches" class="button">Voir les détails</a>
+
+<!-- English Version -->
+<div class="bilingual">
+    <h2>Care Confirmed! 🎉</h2>
+    <p>Hello,</p>
+    <p>
+        Excellent news! The care arrangement has been confirmed by both parties.
+    </p>
+
+    <div class="info-box">
+        <strong>Confirmed Care Details:</strong><br>
+        <strong>Dates:</strong> {{ start_date }} → {{ end_date }}<br>
+        <strong>Guardian:</strong> {{ offer_owner_email }}<br>
+        <strong>Requester:</strong> {{ requester_email }}<br>
+        <strong>Status:</strong> ✅ Confirmed
+    </div>
+
+    <p>
+        You can now coordinate the final details with the other party:
+    </p>
+    <ul>
+        <li>Meeting location</li>
+        <li>Exact pickup and return times</li>
+        <li>Dog's specific needs</li>
+        <li>Emergency contact information</li>
+    </ul>
+
+    <a href="{{ app_url }}/matches" class="button">View Details</a>
+</div>
+{% endblock %}

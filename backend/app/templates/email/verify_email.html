@@ -1,0 +1,42 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<h2>Verify Your Email Address</h2>
+
+<p>Hello,</p>
+
+<p>Thank you for creating an account with Regami! Please verify your email address <strong>{{ user_email }}</strong> to complete your registration.</p>
+
+<p>Click the button below to verify your email:</p>
+
+<p style="text-align: center;">
+    <a href="{{ verification_url }}" class="button">Verify Email</a>
+</p>
+
+<div class="info-box">
+    <p><strong>Why verify?</strong> Verifying your email helps us ensure the security of your account and allows you to receive important notifications about your dog care matches.</p>
+</div>
+
+<p>If the button doesn't work, copy and paste this link into your browser:</p>
+<p style="word-break: break-all; color: #667eea;">{{ verification_url }}</p>
+
+<div class="divider"></div>
+
+<div class="bilingual">
+    <h2>Verifiez votre adresse email</h2>
+
+    <p>Bonjour,</p>
+
+    <p>Merci d'avoir cree un compte sur Regami ! Veuillez verifier votre adresse email <strong>{{ user_email }}</strong> pour completer votre inscription.</p>
+
+    <p>Cliquez sur le bouton ci-dessous pour verifier votre email :</p>
+
+    <p style="text-align: center;">
+        <a href="{{ verification_url }}" class="button">Verifier l'email</a>
+    </p>
+
+    <div class="info-box">
+        <p><strong>Pourquoi verifier ?</strong> La verification de votre email nous aide a assurer la securite de votre compte et vous permet de recevoir des notifications importantes concernant vos correspondances de garde de chien.</p>
+    </div>
+</div>
+{% endblock %}

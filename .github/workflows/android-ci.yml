@@ -1,0 +1,512 @@
+name: Android CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-ci.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-ci.yml'
+
+# Cancel in-progress runs for the same workflow and branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '17'
+  JAVA_DISTRIBUTION: 'temurin'
+
+jobs:
+  lint:
+    name: Lint Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Create google-services.json placeholder
+        run: |
+          cat > android/app/google-services.json << 'EOF'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "regami-placeholder",
+              "storage_bucket": "regami-placeholder.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+                  "android_client_info": {"package_name": "com.regami"}
+                },
+                "oauth_client": [],
+                "api_key": [{"current_key": "AIzaSyPlaceholderKeyForCIBuilds000"}],
+                "services": {"appinvite_service": {"other_platform_oauth_client": []}}
+              },
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000001",
+                  "android_client_info": {"package_name": "com.regami.debug"}
+                },
+                "oauth_client": [],
+                "api_key": [{"current_key": "AIzaSyPlaceholderKeyForCIBuilds000"}],
+                "services": {"appinvite_service": {"other_platform_oauth_client": []}}
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+
+      - name: Run Gradle Lint
+        working-directory: android
+        run: ./gradlew lint --no-daemon --stacktrace
+
+      - name: Upload Lint Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-results
+          path: android/app/build/reports/lint-results*.html
+          retention-days: 7
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Create google-services.json placeholder
+        run: |
+          cat > android/app/google-services.json << 'EOF'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "regami-placeholder",
+              "storage_bucket": "regami-placeholder.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+                  "android_client_info": {"package_name": "com.regami"}
+                },
+                "oauth_client": [],
+                "api_key": [{"current_key": "AIzaSyPlaceholderKeyForCIBuilds000"}],
+                "services": {"appinvite_service": {"other_platform_oauth_client": []}}
+              },
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000001",
+                  "android_client_info": {"package_name": "com.regami.debug"}
+                },
+                "oauth_client": [],
+                "api_key": [{"current_key": "AIzaSyPlaceholderKeyForCIBuilds000"}],
+                "services": {"appinvite_service": {"other_platform_oauth_client": []}}
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+
+      - name: Run Unit Tests
+        working-directory: android
+        run: ./gradlew test --no-daemon --stacktrace
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: |
+            android/app/build/reports/tests/
+            android/app/build/test-results/
+          retention-days: 7
+
+      - name: Publish Test Report
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: 'android/app/build/test-results/test*/TEST-*.xml'
+          check_name: 'Unit Test Results'
+          fail_on_failure: true
+
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [lint, unit-tests]
+
+    strategy:
+      matrix:
+        build-type: [debug, release]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Create google-services.json placeholder
+        run: |
+          cat > android/app/google-services.json << 'EOF'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "regami-placeholder",
+              "storage_bucket": "regami-placeholder.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+                  "android_client_info": {"package_name": "com.regami"}
+                },
+                "oauth_client": [],
+                "api_key": [{"current_key": "AIzaSyPlaceholderKeyForCIBuilds000"}],
+                "services": {"appinvite_service": {"other_platform_oauth_client": []}}
+              },
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000001",
+                  "android_client_info": {"package_name": "com.regami.debug"}
+                },
+                "oauth_client": [],
+                "api_key": [{"current_key": "AIzaSyPlaceholderKeyForCIBuilds000"}],
+                "services": {"appinvite_service": {"other_platform_oauth_client": []}}
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+
+      - name: Build ${{ matrix.build-type }} APK
+        working-directory: android
+        run: |
+          if [ "${{ matrix.build-type }}" == "release" ]; then
+            ./gradlew assembleRelease --no-daemon --stacktrace
+          else
+            ./gradlew assembleDebug --no-daemon --stacktrace
+          fi
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-${{ matrix.build-type }}
+          path: android/app/build/outputs/apk/${{ matrix.build-type }}/*.apk
+          retention-days: 14
+
+      - name: Get APK Info
+        id: apk-info
+        working-directory: android
+        run: |
+          APK_PATH=$(find app/build/outputs/apk/${{ matrix.build-type }} -name "*.apk" | head -n 1)
+          APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
+          echo "size=$APK_SIZE" >> $GITHUB_OUTPUT
+          echo "path=$APK_PATH" >> $GITHUB_OUTPUT
+
+      - name: Comment APK Size on PR
+        if: github.event_name == 'pull_request' && matrix.build-type == 'debug'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const apkSize = '${{ steps.apk-info.outputs.size }}';
+            const comment = `### 📱 Android Build Summary
+
+            **APK Size:** ${apkSize}
+            **Build Type:** ${{ matrix.build-type }}
+            **Build Status:** ✅ Success
+
+            The APK has been built and is available as an artifact.`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  instrumented-tests:
+    name: Instrumented Tests (API ${{ matrix.api-level }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Only run on main/develop to save CI time
+    # Emulator tests are expensive and slow
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [24, 29, 34, 35, 36]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Create google-services.json placeholder
+        run: |
+          cat > android/app/google-services.json << 'EOF'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "regami-placeholder",
+              "storage_bucket": "regami-placeholder.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+                  "android_client_info": {"package_name": "com.regami"}
+                },
+                "oauth_client": [],
+                "api_key": [{"current_key": "AIzaSyPlaceholderKeyForCIBuilds000"}],
+                "services": {"appinvite_service": {"other_platform_oauth_client": []}}
+              },
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000001",
+                  "android_client_info": {"package_name": "com.regami.debug"}
+                },
+                "oauth_client": [],
+                "api_key": [{"current_key": "AIzaSyPlaceholderKeyForCIBuilds000"}],
+                "services": {"appinvite_service": {"other_platform_oauth_client": []}}
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+
+      - name: Enable KVM (for faster emulator)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ matrix.api-level }}
+
+      - name: Create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: Run Instrumented Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          working-directory: android
+          script: ./gradlew connectedDebugAndroidTest --no-daemon --stacktrace
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: instrumented-test-results-api-${{ matrix.api-level }}
+          path: |
+            android/app/build/reports/androidTests/
+            android/app/build/outputs/androidTest-results/
+          retention-days: 7
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Create google-services.json placeholder
+        run: |
+          cat > android/app/google-services.json << 'EOF'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "regami-placeholder",
+              "storage_bucket": "regami-placeholder.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+                  "android_client_info": {"package_name": "com.regami"}
+                },
+                "oauth_client": [],
+                "api_key": [{"current_key": "AIzaSyPlaceholderKeyForCIBuilds000"}],
+                "services": {"appinvite_service": {"other_platform_oauth_client": []}}
+              },
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000001",
+                  "android_client_info": {"package_name": "com.regami.debug"}
+                },
+                "oauth_client": [],
+                "api_key": [{"current_key": "AIzaSyPlaceholderKeyForCIBuilds000"}],
+                "services": {"appinvite_service": {"other_platform_oauth_client": []}}
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+
+      - name: Run Dependency Check
+        working-directory: android
+        run: |
+          ./gradlew dependencies --no-daemon > dependencies.txt
+          cat dependencies.txt
+
+      - name: Upload Dependencies List
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependencies-list
+          path: android/dependencies.txt
+          retention-days: 7
+
+  pr-comment:
+    name: PR Comment Summary
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: [lint, unit-tests, build]
+
+    steps:
+      - name: Download Test Results
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-results
+          path: test-results
+
+      - name: Parse Test Results
+        id: test-results
+        run: |
+          # Count test results from XML files
+          TOTAL_TESTS=$(find test-results -name "TEST-*.xml" -exec grep -o 'tests="[0-9]*"' {} \; | cut -d'"' -f2 | awk '{s+=$1} END {print s}')
+          FAILURES=$(find test-results -name "TEST-*.xml" -exec grep -o 'failures="[0-9]*"' {} \; | cut -d'"' -f2 | awk '{s+=$1} END {print s}')
+          ERRORS=$(find test-results -name "TEST-*.xml" -exec grep -o 'errors="[0-9]*"' {} \; | cut -d'"' -f2 | awk '{s+=$1} END {print s}')
+
+          echo "total=$TOTAL_TESTS" >> $GITHUB_OUTPUT
+          echo "failures=$FAILURES" >> $GITHUB_OUTPUT
+          echo "errors=$ERRORS" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const total = '${{ steps.test-results.outputs.total }}' || '0';
+            const failures = '${{ steps.test-results.outputs.failures }}' || '0';
+            const errors = '${{ steps.test-results.outputs.errors }}' || '0';
+            const passed = parseInt(total) - parseInt(failures) - parseInt(errors);
+            const passRate = total > 0 ? ((passed / parseInt(total)) * 100).toFixed(1) : '0';
+
+            const status = (failures === '0' && errors === '0') ? '✅' : '❌';
+
+            const comment = `## ${status} Android CI Results
+
+            ### 🧪 Test Results
+            - **Total Tests:** ${total}
+            - **Passed:** ${passed}
+            - **Failed:** ${failures}
+            - **Errors:** ${errors}
+            - **Pass Rate:** ${passRate}%
+
+            ### 📋 Checks
+            - ✅ Lint check passed
+            - ${status} Unit tests ${failures === '0' && errors === '0' ? 'passed' : 'failed'}
+            - ✅ Build successful
+
+            ---
+            *Instrumented tests run only on main/develop branches*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

@@ -1,0 +1,32 @@
+# Caddyfile for Regami Staging
+# Automatic HTTPS with Let's Encrypt HTTP-01 challenge
+
+staging.regami.com {
+    encode gzip
+
+    # API requests
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy api:8000
+    }
+
+    # Health check
+    handle /health {
+        reverse_proxy api:8000
+    }
+
+    # WebSocket
+    handle /ws* {
+        reverse_proxy api:8000
+    }
+
+    # Static web app
+    handle {
+        reverse_proxy web:80
+    }
+}
+
+api.staging.regami.com {
+    encode gzip
+    reverse_proxy api:8000
+}
