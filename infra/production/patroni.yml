@@ -1,0 +1,88 @@
+# Patroni Configuration for Regami Production
+# IOPS-optimized for Cloudstack slow storage
+#
+# This file should be mounted to /etc/patroni/patroni.yml in the Patroni container
+
+scope: regami-cluster
+namespace: /service/
+name: ${PATRONI_NAME}
+
+restapi:
+  listen: 0.0.0.0:8008
+  connect_address: ${PATRONI_RESTAPI_CONNECT_ADDRESS}
+
+etcd3:
+  hosts: ${PATRONI_ETCD3_HOSTS}
+
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    postgresql:
+      use_pg_rewind: true
+      use_slots: true
+      parameters:
+        # IOPS Optimization for slow Cloudstack storage
+        # Memory settings (4GB RAM VM)
+        shared_buffers: 1GB
+        effective_cache_size: 3GB
+        work_mem: 64MB
+        maintenance_work_mem: 256MB
+
+        # Write performance (accept some durability tradeoff)
+        synchronous_commit: "off"
+        wal_buffers: 64MB
+
+        # Checkpoint tuning (reduce IOPS)
+        checkpoint_timeout: 15min
+        checkpoint_completion_target: 0.9
+        max_wal_size: 2GB
+        min_wal_size: 512MB
+
+        # SSD-optimized settings
+        random_page_cost: 1.1
+        effective_io_concurrency: 200
+
+        # Connection settings
+        max_connections: 200
+
+        # Logging
+        log_min_duration_statement: 1000
+        log_checkpoints: "on"
+        log_lock_waits: "on"
+
+        # Autovacuum tuning
+        autovacuum_vacuum_scale_factor: 0.1
+        autovacuum_analyze_scale_factor: 0.05
+        autovacuum_vacuum_cost_limit: 1000
+
+  initdb:
+    - encoding: UTF8
+    - data-checksums
+
+  pg_hba:
+    - host replication replicator 0.0.0.0/0 md5
+    - host all all 0.0.0.0/0 md5
+
+postgresql:
+  listen: 0.0.0.0:5432
+  connect_address: ${PATRONI_POSTGRESQL_CONNECT_ADDRESS}
+  data_dir: ${PATRONI_POSTGRESQL_DATA_DIR}
+  pgpass: /tmp/pgpass
+  authentication:
+    replication:
+      username: replicator
+      password: ${PATRONI_REPLICATION_PASSWORD}
+    superuser:
+      username: ${PATRONI_SUPERUSER_USERNAME}
+      password: ${PATRONI_SUPERUSER_PASSWORD}
+  parameters:
+    unix_socket_directories: '/var/run/postgresql'
+
+tags:
+  nofailover: false
+  noloadbalance: false
+  clonefrom: false
+  nosync: false

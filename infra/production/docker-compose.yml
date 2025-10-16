@@ -1,0 +1,171 @@
+# Regami Production Docker Compose
+# High-Availability stack with Patroni, etcd, and MinIO
+# For use on VM1-PROD (active) and VM2-PROD (standby)
+#
+# Prerequisites:
+# - Docker and Docker Compose installed
+# - Environment variables set in .env file
+# - SSL certificates synced between VMs
+#
+# Usage:
+#   docker compose -f docker-compose.yml up -d
+
+services:
+  # Caddy reverse proxy with automatic HTTPS
+  caddy:
+    image: caddy:2-alpine
+    container_name: regami-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - web
+    networks:
+      - regami-net
+
+  # Regami API (FastAPI)
+  api:
+    image: ghcr.io/benj-n/regami-api:${IMAGE_TAG:-latest}
+    container_name: regami-api
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
+      - SECRET_KEY=${SECRET_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - APP_ENV=prod
+      - STORAGE_BACKEND=s3
+      - S3_ENDPOINT_URL=http://minio:9000
+      - S3_ACCESS_KEY=${MINIO_ROOT_USER}
+      - S3_SECRET_KEY=${MINIO_ROOT_PASSWORD}
+      - S3_REGION=ca-central-1
+      - S3_BUCKET=regami
+      - S3_PUBLIC_BASE_URL=${S3_PUBLIC_BASE_URL}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - SENTRY_ENVIRONMENT=production
+    depends_on:
+      - pgbouncer
+      - minio
+    networks:
+      - regami-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Regami Web (Vite/React static)
+  web:
+    image: ghcr.io/benj-n/regami-web:${IMAGE_TAG:-latest}
+    container_name: regami-web
+    restart: unless-stopped
+    networks:
+      - regami-net
+
+  # PgBouncer connection pooler
+  pgbouncer:
+    image: edoburu/pgbouncer:1.21.0
+    container_name: regami-pgbouncer
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@patroni:5432/${POSTGRES_DB}
+      - POOL_MODE=transaction
+      - MAX_CLIENT_CONN=200
+      - DEFAULT_POOL_SIZE=25
+    depends_on:
+      - patroni
+    networks:
+      - regami-net
+
+  # Patroni - PostgreSQL HA manager
+  patroni:
+    image: patroni/patroni:3.2.0
+    container_name: regami-patroni
+    restart: unless-stopped
+    hostname: ${HOSTNAME:-vm1-prod}
+    environment:
+      - PATRONI_NAME=${HOSTNAME:-vm1-prod}
+      - PATRONI_SCOPE=regami-cluster
+      - PATRONI_ETCD3_HOSTS=etcd:2379
+      - PATRONI_POSTGRESQL_DATA_DIR=/var/lib/postgresql/data
+      - PATRONI_POSTGRESQL_LISTEN=0.0.0.0:5432
+      - PATRONI_POSTGRESQL_CONNECT_ADDRESS=${HOST_IP}:5432
+      - PATRONI_RESTAPI_LISTEN=0.0.0.0:8008
+      - PATRONI_RESTAPI_CONNECT_ADDRESS=${HOST_IP}:8008
+      - PATRONI_SUPERUSER_USERNAME=${POSTGRES_USER}
+      - PATRONI_SUPERUSER_PASSWORD=${POSTGRES_PASSWORD}
+      - PATRONI_REPLICATION_USERNAME=replicator
+      - PATRONI_REPLICATION_PASSWORD=${REPLICATION_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./patroni.yml:/etc/patroni/patroni.yml:ro
+    depends_on:
+      - etcd
+    networks:
+      - regami-net
+    ports:
+      - "5432:5432"
+      - "8008:8008"
+
+  # etcd - Distributed key-value store for Patroni
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.11
+    container_name: regami-etcd
+    restart: unless-stopped
+    hostname: ${HOSTNAME:-vm1-prod}
+    environment:
+      - ETCD_NAME=${HOSTNAME:-vm1-prod}
+      - ETCD_DATA_DIR=/etcd-data
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://${HOST_IP}:2379
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://${HOST_IP}:2380
+      - ETCD_INITIAL_CLUSTER=${ETCD_INITIAL_CLUSTER:-vm1-prod=http://10.0.0.1:2380,vm2-prod=http://10.0.0.2:2380}
+      - ETCD_INITIAL_CLUSTER_STATE=${ETCD_CLUSTER_STATE:-new}
+      - ETCD_INITIAL_CLUSTER_TOKEN=regami-etcd-cluster
+    volumes:
+      - etcd_data:/etcd-data
+    networks:
+      - regami-net
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+
+  # MinIO - S3-compatible object storage
+  minio:
+    image: minio/minio:RELEASE.2024-01-01T16-36-33Z
+    container_name: regami-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    networks:
+      - regami-net
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  caddy_data:
+  caddy_config:
+  postgres_data:
+  etcd_data:
+  minio_data:
+
+networks:
+  regami-net:
+    driver: bridge

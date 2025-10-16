@@ -1,0 +1,24 @@
+# Keep backend Docker context small when building directly from backend/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+.eggs/
+*.egg-info/
+.alembic_cache/
+
+# Local artifacts
+*.db
+*.db-shm
+*.db-wal
+regami.db
+uploads/
+firebase-service-account.json
+
+# Git & editor
+.git/
+.vscode/
+.DS_Store

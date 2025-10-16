@@ -1,0 +1,136 @@
+{
+  "dashboard": {
+    "title": "Regami Business Metrics",
+    "tags": ["regami", "business", "kpi"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Total Users",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "regami_users_total"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4}
+      },
+      {
+        "id": 2,
+        "title": "Active Users (7d)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "regami_users_active_7d"
+          }
+        ],
+        "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4}
+      },
+      {
+        "id": 3,
+        "title": "Total Dogs",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "regami_dogs_total"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4}
+      },
+      {
+        "id": 4,
+        "title": "Active Matches",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "regami_matches_active"
+          }
+        ],
+        "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4}
+      },
+      {
+        "id": 5,
+        "title": "User Registrations",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "increase(regami_users_registered_total[24h])",
+            "legendFormat": "Daily registrations"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8}
+      },
+      {
+        "id": 6,
+        "title": "Matches Created",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "increase(regami_matches_created_total[24h])",
+            "legendFormat": "Daily matches"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8}
+      },
+      {
+        "id": 7,
+        "title": "Messages Sent",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(regami_messages_sent_total[5m])",
+            "legendFormat": "Messages per minute"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8}
+      },
+      {
+        "id": 8,
+        "title": "Match Status Distribution",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum by (status) (regami_matches_by_status)"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8}
+      },
+      {
+        "id": 9,
+        "title": "User Engagement Rate",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "regami_users_active_7d / regami_users_total * 100"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 20, "w": 8, "h": 6}
+      },
+      {
+        "id": 10,
+        "title": "Average Matches per User",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "regami_matches_total / regami_users_total"
+          }
+        ],
+        "gridPos": {"x": 8, "y": 20, "w": 8, "h": 6}
+      },
+      {
+        "id": 11,
+        "title": "Match Success Rate",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "regami_matches_confirmed / regami_matches_created_total * 100"
+          }
+        ],
+        "gridPos": {"x": 16, "y": 20, "w": 8, "h": 6}
+      }
+    ],
+    "refresh": "5m",
+    "schemaVersion": 30,
+    "version": 1
+  }
+}

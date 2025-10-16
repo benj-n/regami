@@ -1,0 +1,47 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<!-- French Version -->
+<h2>Demande de garde annulée ❌</h2>
+<p>Bonjour,</p>
+<p>
+    Nous vous informons que la demande de garde suivante a été annulée.
+</p>
+
+<div class="info-box">
+    <strong>Détails de la garde annulée :</strong><br>
+    <strong>Dates :</strong> {{ start_date }} → {{ end_date }}<br>
+    <strong>Gardien :</strong> {{ offer_owner_email }}<br>
+    <strong>Demandeur :</strong> {{ requester_email }}<br>
+    <strong>Statut :</strong> ❌ Annulée
+</div>
+
+<p>
+    Vous pouvez continuer à rechercher d'autres opportunités de garde sur notre plateforme.
+</p>
+
+<a href="{{ app_url }}/matches" class="button">Voir les autres demandes</a>
+
+<!-- English Version -->
+<div class="bilingual">
+    <h2>Care Request Cancelled ❌</h2>
+    <p>Hello,</p>
+    <p>
+        We inform you that the following care request has been cancelled.
+    </p>
+
+    <div class="info-box">
+        <strong>Cancelled Care Details:</strong><br>
+        <strong>Dates:</strong> {{ start_date }} → {{ end_date }}<br>
+        <strong>Guardian:</strong> {{ offer_owner_email }}<br>
+        <strong>Requester:</strong> {{ requester_email }}<br>
+        <strong>Status:</strong> ❌ Cancelled
+    </div>
+
+    <p>
+        You can continue searching for other care opportunities on our platform.
+    </p>
+
+    <a href="{{ app_url }}/matches" class="button">View Other Requests</a>
+</div>
+{% endblock %}

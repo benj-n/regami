@@ -1,0 +1,41 @@
+# Caddyfile for Regami Production
+# Automatic HTTPS with Let's Encrypt HTTP-01 challenge
+#
+# Note: DNS must point to this server before starting Caddy
+
+# Main website
+regami.com, www.regami.com {
+    encode gzip
+
+    # API requests
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy api:8000
+    }
+
+    # Health check (public)
+    handle /health {
+        reverse_proxy api:8000
+    }
+
+    # WebSocket endpoint
+    handle /ws* {
+        reverse_proxy api:8000
+    }
+
+    # Static web app
+    handle {
+        reverse_proxy web:80
+    }
+}
+
+# API subdomain
+api.regami.com {
+    encode gzip
+    reverse_proxy api:8000
+}
+
+# MinIO storage (optional public access)
+storage.regami.com {
+    reverse_proxy minio:9000
+}

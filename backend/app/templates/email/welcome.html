@@ -1,0 +1,43 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<!-- French Version -->
+<h2>Bienvenue sur Regami ! 🎉</h2>
+<p>Bonjour {{ user_email }},</p>
+<p>
+    Nous sommes ravis de vous accueillir dans la communauté Regami !
+    Notre plateforme vous permet de trouver facilement des gardiens de confiance pour votre chien.
+</p>
+
+<div class="info-box">
+    <strong>Prochaines étapes :</strong>
+    <ul>
+        <li>Complétez votre profil</li>
+        <li>Ajoutez les informations de votre chien</li>
+        <li>Commencez à rechercher des gardiens ou proposez vos services</li>
+    </ul>
+</div>
+
+<a href="{{ app_url }}" class="button">Accéder à Regami</a>
+
+<!-- English Version -->
+<div class="bilingual">
+    <h2>Welcome to Regami! 🎉</h2>
+    <p>Hello {{ user_email }},</p>
+    <p>
+        We're excited to welcome you to the Regami community!
+        Our platform makes it easy to find trusted guardians for your dog.
+    </p>
+
+    <div class="info-box">
+        <strong>Next Steps:</strong>
+        <ul>
+            <li>Complete your profile</li>
+            <li>Add your dog's information</li>
+            <li>Start searching for guardians or offer your services</li>
+        </ul>
+    </div>
+
+    <a href="{{ app_url }}" class="button">Access Regami</a>
+</div>
+{% endblock %}

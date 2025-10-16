@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and Discussions
+    url: https://github.com/benj-n/regami/discussions
+    about: Ask questions, share ideas, or discuss the project
+  - name: Security Vulnerabilities
+    url: https://github.com/benj-n/regami/security/advisories
+    about: Report critical security issues privately

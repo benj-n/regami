@@ -1,0 +1,107 @@
+{
+  "dashboard": {
+    "title": "Regami Infrastructure",
+    "tags": ["regami", "infrastructure", "resources"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "CPU Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{container=~\"regami-.*\"}[5m]) * 100",
+            "legendFormat": "{{container}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}
+      },
+      {
+        "id": 2,
+        "title": "Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{container=~\"regami-.*\"} / container_spec_memory_limit_bytes{container=~\"regami-.*\"} * 100",
+            "legendFormat": "{{container}}"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8}
+      },
+      {
+        "id": 3,
+        "title": "Disk Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"} * 100"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8}
+      },
+      {
+        "id": 4,
+        "title": "Network I/O",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_network_receive_bytes_total{container=~\"regami-.*\"}[5m])",
+            "legendFormat": "{{container}} RX"
+          },
+          {
+            "expr": "rate(container_network_transmit_bytes_total{container=~\"regami-.*\"}[5m])",
+            "legendFormat": "{{container}} TX"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8}
+      },
+      {
+        "id": 5,
+        "title": "Database Connections",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "pg_stat_database_numbackends{datname=\"regami\"}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 16, "w": 6, "h": 4}
+      },
+      {
+        "id": 6,
+        "title": "Redis Memory",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "redis_memory_used_bytes / redis_memory_max_bytes * 100"
+          }
+        ],
+        "gridPos": {"x": 6, "y": 16, "w": 6, "h": 4}
+      },
+      {
+        "id": 7,
+        "title": "S3 Storage Used",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "aws_s3_bucket_size_bytes{bucket=\"regami-media\"}"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 16, "w": 6, "h": 4}
+      },
+      {
+        "id": 8,
+        "title": "Container Restarts (24h)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "increase(kube_pod_container_status_restarts_total{container=~\"regami-.*\"}[24h])"
+          }
+        ],
+        "gridPos": {"x": 18, "y": 16, "w": 6, "h": 4}
+      }
+    ],
+    "refresh": "1m",
+    "schemaVersion": 30,
+    "version": 1
+  }
+}

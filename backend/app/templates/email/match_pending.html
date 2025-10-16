@@ -1,0 +1,49 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<!-- French Version -->
+<h2>Nouvelle demande de garde 🐾</h2>
+<p>Bonjour,</p>
+<p>
+    Une nouvelle demande correspond à votre offre de garde !
+    Un utilisateur souhaite vous confier son chien pendant la période suivante :
+</p>
+
+<div class="info-box">
+    <strong>Détails de la demande :</strong><br>
+    <strong>Dates :</strong> {{ start_date }} → {{ end_date }}<br>
+    <strong>Demandeur :</strong> {{ requester_email }}<br>
+    <strong>Statut :</strong> En attente de votre réponse
+</div>
+
+<p>
+    Veuillez examiner cette demande et confirmer si vous êtes disponible.
+    Le demandeur sera notifié de votre décision.
+</p>
+
+<a href="{{ app_url }}/matches" class="button">Voir la demande</a>
+
+<!-- English Version -->
+<div class="bilingual">
+    <h2>New Care Request 🐾</h2>
+    <p>Hello,</p>
+    <p>
+        A new request matches your care offer!
+        A user would like you to care for their dog during the following period:
+    </p>
+
+    <div class="info-box">
+        <strong>Request Details:</strong><br>
+        <strong>Dates:</strong> {{ start_date }} → {{ end_date }}<br>
+        <strong>Requester:</strong> {{ requester_email }}<br>
+        <strong>Status:</strong> Awaiting your response
+    </div>
+
+    <p>
+        Please review this request and confirm if you are available.
+        The requester will be notified of your decision.
+    </p>
+
+    <a href="{{ app_url }}/matches" class="button">View Request</a>
+</div>
+{% endblock %}

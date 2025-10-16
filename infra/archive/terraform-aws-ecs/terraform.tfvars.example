@@ -1,0 +1,222 @@
+# =============================================================================
+# Regami AWS Infrastructure - Terraform Variables
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in your actual values.
+# IMPORTANT: Never commit terraform.tfvars to version control!
+#
+# For production deployments:
+# 1. Store secrets (db_password, SECRET_KEY, etc.) in AWS Secrets Manager
+# 2. Use strong random passwords (min 32 characters)
+# 3. Enable MFA for AWS accounts
+# 4. Review security group rules carefully
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# General Configuration
+# -----------------------------------------------------------------------------
+
+# AWS region for all resources (recommended: ca-central-1 for Canada)
+region = "ca-central-1"
+
+# Project name - used as prefix for all resource names
+# Helps identify resources and enables multiple deployments in same account
+project = "regami"
+
+# -----------------------------------------------------------------------------
+# Database Configuration (RDS PostgreSQL)
+# -----------------------------------------------------------------------------
+
+# PostgreSQL admin username
+# Constraints: 1-16 alphanumeric characters, first char must be letter
+db_username = "regami_admin"
+
+# PostgreSQL admin password
+# SECURITY: Generate strong password with: openssl rand -base64 32
+# Must be at least 8 characters
+# Recommended: Store in AWS Secrets Manager instead of tfvars
+db_password = "CHANGE_ME_GENERATE_STRONG_PASSWORD"
+
+# RDS instance class (default: db.t4g.micro)
+# For production, consider: db.t4g.small, db.r6g.large, etc.
+# See: https://aws.amazon.com/rds/instance-types/
+db_instance_class = "db.t4g.micro"
+
+# Storage size in GB (default: 20)
+# PostgreSQL minimum: 20 GB
+# Production recommendation: Start with 50-100 GB with autoscaling enabled
+db_allocated_storage = 20
+
+# -----------------------------------------------------------------------------
+# Network Configuration
+# -----------------------------------------------------------------------------
+
+# VPC ID where resources will be deployed
+# Find your VPC ID in AWS Console → VPC → Your VPCs
+# Example: vpc-0123456789abcdef0
+vpc_id = "vpc-xxxxxxxxxxxxxxxx"
+
+# Public subnets for ALB (Application Load Balancer)
+# Must be in at least 2 different Availability Zones for high availability
+# Find subnet IDs in AWS Console → VPC → Subnets
+# Filter by VPC ID and look for subnets with "Public" in name or with IGW route
+public_subnets = [
+  "subnet-xxxxxxxxxxxxxxxxx",  # ca-central-1a (example)
+  "subnet-yyyyyyyyyyyyyyyyy"   # ca-central-1b (example)
+]
+
+# Private subnets for ECS tasks and RDS
+# Must be in at least 2 different Availability Zones
+# Should have NAT Gateway route for outbound internet access
+private_subnets = [
+  "subnet-zzzzzzzzzzzzzzzzz",  # ca-central-1a (example)
+  "subnet-wwwwwwwwwwwwwwwww"   # ca-central-1b (example)
+]
+
+# -----------------------------------------------------------------------------
+# Environment Configuration
+# -----------------------------------------------------------------------------
+
+# Environment name: dev, staging, or prod
+# Affects deletion protection, backup retention, and other safety features
+environment = "prod"
+
+# Database name (default: regami)
+db_name = "regami"
+
+# -----------------------------------------------------------------------------
+# Application Secrets (Stored in AWS Secrets Manager)
+# -----------------------------------------------------------------------------
+
+# Backend SECRET_KEY for JWT signing
+# SECURITY: Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+# Must be at least 32 characters
+# Will be stored in AWS Secrets Manager: ${project}-app-config
+secret_key = "CHANGE_ME_GENERATE_WITH_SECRETS_TOKEN_URLSAFE_32"
+
+# -----------------------------------------------------------------------------
+# S3/Storage Configuration
+# -----------------------------------------------------------------------------
+
+# S3 access credentials (leave empty to use IAM role - RECOMMENDED)
+# Only needed if using external S3-compatible storage (MinIO, DigitalOcean Spaces, etc.)
+s3_access_key = ""
+s3_secret_key = ""
+
+# Custom S3 endpoint URL (leave empty to use AWS S3)
+# Example for MinIO: "https://minio.example.com"
+# Example for DigitalOcean Spaces: "https://nyc3.digitaloceanspaces.com"
+s3_endpoint_url = ""
+
+# Public base URL for S3 objects (leave empty to use default AWS URL)
+# Example: "https://cdn.regami.com" if using CloudFront
+# Will default to: "https://${bucket}.s3.${region}.amazonaws.com"
+s3_public_base_url = ""
+
+# -----------------------------------------------------------------------------
+# SMTP Configuration (Optional - for email notifications)
+# -----------------------------------------------------------------------------
+
+# SMTP server hostname (leave empty to disable email notifications)
+# Example for AWS SES: "email-smtp.ca-central-1.amazonaws.com"
+# Example for SendGrid: "smtp.sendgrid.net"
+# Example for Gmail: "smtp.gmail.com"
+smtp_host = ""
+
+# SMTP server port (default: 587 for STARTTLS)
+# Common ports: 587 (STARTTLS), 465 (SSL/TLS), 25 (plain - not recommended)
+smtp_port = 587
+
+# SMTP authentication credentials
+# For AWS SES: Create SMTP credentials in SES console
+# Will be stored in AWS Secrets Manager: ${project}-smtp-credentials
+smtp_username = ""
+smtp_password = ""
+
+# From email address for notifications
+# Must be verified in SES if using AWS SES
+smtp_from = "noreply@regami.com"
+
+# -----------------------------------------------------------------------------
+# ECS Configuration
+# -----------------------------------------------------------------------------
+
+# API service configuration
+api_cpu            = 256   # 0.25 vCPU (256 = 0.25, 512 = 0.5, 1024 = 1, 2048 = 2)
+api_memory         = 512   # MB (must be compatible with CPU)
+api_desired_count  = 2     # Number of API tasks to run
+api_min_capacity   = 1     # Minimum tasks for auto-scaling
+api_max_capacity   = 10    # Maximum tasks for auto-scaling
+
+# Web service configuration
+web_cpu           = 256    # 0.25 vCPU
+web_memory        = 512    # MB
+web_desired_count = 2      # Number of Web tasks to run
+
+# CloudWatch logs retention
+log_retention_days = 30    # Days to keep logs (7, 14, 30, 60, 90, 180, 365, etc.)
+
+# -----------------------------------------------------------------------------
+# Domain and SSL Configuration
+# -----------------------------------------------------------------------------
+
+# Primary domain name for your application
+# This will be used for ACM certificate and Route53 records
+domain_name = "regami.com"
+
+# Additional domain aliases (optional)
+# Example: ["www.regami.com", "app.regami.com"]
+domain_aliases = []
+
+# Route53 hosted zone ID (find in Route53 console)
+# Leave empty if you're managing DNS elsewhere (e.g., Cloudflare, Namecheap)
+# Example: "Z1234567890ABC"
+route53_zone_id = ""
+
+# Whether to create a new ACM certificate
+# Set to false if you already have a certificate and provide certificate_arn
+create_certificate = true
+
+# Existing ACM certificate ARN (only if create_certificate = false)
+# Find in ACM console or run: aws acm list-certificates
+certificate_arn = ""
+
+# Enable IPv6 support (optional)
+enable_ipv6 = false
+
+# -----------------------------------------------------------------------------
+# CORS Configuration
+# -----------------------------------------------------------------------------
+
+# Comma-separated list of allowed CORS origins
+# Include your domain and any additional origins (e.g., mobile app, admin panel)
+# Example: "https://regami.com,https://www.regami.com,https://admin.regami.com"
+cors_origins = "https://regami.com"
+
+# -----------------------------------------------------------------------------
+# Quick Start Guide
+# -----------------------------------------------------------------------------
+#
+# 1. Copy this file:
+#    cp terraform.tfvars.example terraform.tfvars
+#
+# 2. Generate strong passwords:
+#    openssl rand -base64 32
+#    python -c "import secrets; print(secrets.token_urlsafe(32))"
+#
+# 3. Find your VPC and subnet IDs:
+#    aws ec2 describe-vpcs --filters "Name=isDefault,Values=true"
+#    aws ec2 describe-subnets --filters "Name=vpc-id,Values=YOUR_VPC_ID"
+#
+# 4. Initialize Terraform:
+#    terraform init
+#
+# 5. Plan deployment:
+#    terraform plan
+#
+# 6. Apply (create resources):
+#    terraform apply
+#
+# 7. Destroy (cleanup):
+#    terraform destroy
+#
+# -----------------------------------------------------------------------------
