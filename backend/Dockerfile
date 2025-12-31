@@ -2,7 +2,7 @@
 # Uses Alpine Linux for smaller image size and better layer caching
 
 # Stage 1: Build stage with all build dependencies
-FROM python:3.12-alpine AS builder
+FROM python:3.14-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache \
@@ -24,7 +24,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Stage 2: Runtime stage with minimal dependencies
-FROM python:3.12-alpine
+FROM python:3.14-alpine
 
 # Install runtime dependencies only
 RUN apk add --no-cache \
