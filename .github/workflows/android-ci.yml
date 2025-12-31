@@ -458,7 +458,7 @@ jobs:
 
     steps:
       - name: Download Test Results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: unit-test-results
           path: test-results

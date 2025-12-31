@@ -194,13 +194,13 @@ jobs:
 
     steps:
       - name: Download coverage report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: coverage-report
           path: coverage
 
       - name: Download bundle stats
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: bundle-stats
           path: bundle-stats
